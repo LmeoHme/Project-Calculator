@@ -1,39 +1,119 @@
-const calculatorScreen = document.querySelector("#calculator-screen");
-const outputBox = calculatorScreen.firstElementChild;
-const inputBox = calculatorScreen.lastElementChild;
+// Objects
+const calculatorUI = {
+    outputBox: document.querySelector("#calculator-screen").firstElementChild,
+    inputBox: document.querySelector("#calculator-screen").lastElementChild,
+    buttons: document.querySelector("#buttons"),
+}
 
-const buttons = document.querySelector("#buttons");
+const idle = {
+    handleInput: function(input) {
+        switch (inputType.checkInputType(input))
+        {
+            case "operatorButton":
+                this.onOperatorHandling(input);
+                break;
+            case "numberButton":
+                this.onNumberHandling(input);
+                break;
+            case "decimalButton":
+                this.onDecimalHandling();
+                break;
+        }
+    },
+    onOperatorHandling: operator => {
+        if (operator === "-") 
+        {
+            calculatorUI.inputBox.value += operator;
+            calculatorManager.changeState("enteringFirstNumber");
+        }
+    },
+    onNumberHandling: number => {
+        calculatorUI.inputBox.value += number;
+        calculatorManager.currentSate = enteringFirstNumber;
+    },
+    onDecimalHandling: () => {
+        calculatorUI.inputBox.value += fillPrefixDecimal();
+        calculatorManager.changeState("enteringFirstNumber");
+    }
+        
+}
 
+const inputType = {
+    specialButton: "RecordsAll clearDelete",
+    numberButton: "1234567890",
+    decimalButton: ".",
+    operatorButton: "+-x/",
+
+    checkInputType: function(input) {
+        if (this.specialButton.includes(input)) return "specialButton";
+        else if (this.numberButton.includes(input)) return "numberButton";
+        else if (input === this.decimalButton) return "decimalButton";
+        else return "operatorButton";
+    },
+}
+
+const calculatorManager = {
+    firstNumber: null,
+    secondNumber: null,
+    operator: null,
+    currentDisplay: "",
+    currentSate: "idle",
+
+    checkState: function(input) {
+        switch (this.currentSate) 
+        {
+            case "idle":
+                idle.handleInput(input);
+                break;
+        }
+    },
+    changeState: function(state) {
+        this.currentSate = state;
+    }
+}
+
+// Functions
 function invalidInputHandler()
 {
     const EMPTY_STRING = "";
     const VALID_MULTIPLY = "x";
 
-    const invalidInput = /[^0-9.+\-\*x\/]/g;
-    const invalidMultiply = /\*/g;
+    let invalidInput = /[^0-9.+\-\*x\/]/g;
+    let invalidMultiply = /\*/g;
 
     return () => {
-        inputBox.value = inputBox.value
-                            .replace(invalidInput, EMPTY_STRING)
-                            .replace(invalidMultiply, VALID_MULTIPLY);
+        calculatorUI.inputBox.value = calculatorUI.inputBox.value.replace(invalidInput, EMPTY_STRING).replace(invalidMultiply, VALID_MULTIPLY);
     };
 }
 
+function hanldeNonPrefixDecimal()
+{
+
+}
+
+function fillPrefixDecimal()
+{
+    let prefixFilledDecimal = "0."
+    if (calculatorManager.currentDisplay.length === 0) return prefixFilledDecimal;  
+}
+
+// Invalid Input Handling
 const invalidInputHandling = invalidInputHandler();
 
-inputBox.addEventListener("input", e => {
+calculatorUI.inputBox.addEventListener("input", e => {
     e.preventDefault();
     invalidInputHandling();
 });
 
-buttons.addEventListener("click", e => {
-    if (e.target && e.target.nodeName === "LI")
-    {
-        inputBox.value += e.target.innerText;
-    }
+calculatorUI.inputBox.addEventListener("click", e => {
+    e.target.setSelectionRange(e.target.value.length, e.target.value.length);
 });
 
-
-
+calculatorUI.buttons.addEventListener("click", e => {
+    if (e.target && e.target.nodeName === "LI")
+    {
+        calculatorManager.checkState(e.target.innerText);
+    }
+});
 // Align operator to center vertically needs adding a span element with display: inline-flex, will be 
 // applied when implement EnteringOperator state
