@@ -6,13 +6,17 @@ const calculatorUI = {
 }
 
 const inputType = {
-    specialButton: "RecordsAll clearDelete",
+    deleteButton: "Delete",
+    allClearButton: "All clear",
+    showRecordButton: "Records",
     numberButton: "12345678900",
     decimalButton: ".",
     operatorButton: "+-x/",
 
     checkInputType: function(input) {
-        if (this.specialButton.includes(input)) return "specialButton";
+        if (input === this.deleteButton) return "deleteButton";
+        else if (input === this.allClearButton) return "allClearButton";
+        else if (input === this.showRecordButton) return "showRecordButton";
         else if (this.numberButton.includes(input)) return "numberButton";
         else if (input === this.decimalButton) return "decimalButton";
         else return "operatorButton";
@@ -31,6 +35,9 @@ const calculatorManager = {
         {
             case "idle":
                 idle.handleInput(input);
+                break;
+            case "enteringFirstNumber":
+                enteringFirstNumber.handleInput(input);
                 break;
         }
     },
@@ -57,26 +64,101 @@ const idle = {
     onOperatorHandling: operator => {
         if (operator === "-") 
         {
+            // Consider change to function later
             calculatorUI.inputBox.value += operator;
+            calculatorManager.currentDisplay = calculatorUI.inputBox.value;
+
             calculatorManager.changeState("enteringFirstNumber");
+            console.log(calculatorManager.currentSate);
         }
     },
     onNumberHandling: number => {
         if (number === "00") number = "0";
+
+        // Consider change to function later
         calculatorUI.inputBox.value += number;
+        calculatorManager.currentDisplay = calculatorUI.inputBox.value;
+
         calculatorManager.changeState("enteringFirstNumber");
+        console.log(calculatorManager.currentSate);
     },
     onDecimalHandling: () => {
-        calculatorUI.inputBox.value += fillPrefixDecimal();
+        fillPrefixDecimal();
         calculatorManager.changeState("enteringFirstNumber");
+        console.log(calculatorManager.currentSate);
     }
 }
 
 const enteringFirstNumber = {
-    
+    handleInput: function(input) {
+        switch (inputType.checkInputType(input))
+        {
+            case "operatorButton":
+                this.onOperatorHandling(input);
+                break;
+            case "deleteButton":
+                this.onDeletionHandling();
+                break;
+            case "allClearButton":
+                this.onClearAllHandling();
+                break;
+            case "numberButton":
+                this.onNumberHandling(input);
+                break;
+            case "decimalButton":
+                this.onDecimalHandling(input);
+                break;
+        }
+    },
+    onOperatorHandling: operator => {
+        if (calculatorUI.inputBox.value === "-") return;
+
+        // Consider change to function later
+        calculatorUI.inputBox.value += operator;
+        calculatorManager.firstNumber = +calculatorManager.currentDisplay;
+        calculatorManager.currentDisplay = "";
+
+        calculatorManager.changeState("enteringOperator");
+        console.log(calculatorManager.currentSate);
+    },
+    onDeletionHandling: () => {
+        // Consider change to function later
+        calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -1);
+        calculatorManager.currentDisplay = calculatorUI.inputBox.value;
+
+        if (calculatorManager.currentDisplay === "")
+        {
+            calculatorManager.changeState("idle");
+            console.log(calculatorManager.currentSate);
+        }
+    },
+    onClearAllHandling: () => {
+        reset();
+        console.log(calculatorManager.currentSate);
+    },
+    onNumberHandling: number => {
+    // There'll be 1 zero allowed when a number starts with it, but the rule changed when there's a decimal 
+        if (!calculatorManager.currentDisplay.includes("."))
+        {
+            if (calculatorManager.currentDisplay.startsWith("-") && number === "00") number = "0"; 
+            if ((calculatorManager.currentDisplay.startsWith("0") ||
+                calculatorManager.currentDisplay.startsWith("-0")) && number[0] === "0") return;
+        }
+        calculatorUI.inputBox.value += number;
+        calculatorManager.currentDisplay = calculatorUI.inputBox.value;
+    },
+    onDecimalHandling: decimal => {
+        if (calculatorManager.currentDisplay.includes(".")) return;
+        if (calculatorManager.currentDisplay.includes("-")) 
+        {
+            fillPrefixDecimal();
+            return;
+        }
+        calculatorUI.inputBox.value += decimal;
+        calculatorManager.currentDisplay = calculatorUI.inputBox.value;
+    }
 }
-
-
+    
 // Functions
 function invalidInputHandler()
 {
@@ -91,15 +173,27 @@ function invalidInputHandler()
     };
 }
 
-function hanldeNonPrefixDecimal()
-{
-
-}
-
 function fillPrefixDecimal()
 {
-    let prefixFilledDecimal = "0."
-    if (calculatorManager.currentDisplay.length === 0) return prefixFilledDecimal;  
+    let prefixFilledDecimal = "0.";
+    calculatorUI.inputBox.value += prefixFilledDecimal;
+    calculatorManager.currentDisplay = calculatorUI.inputBox.value;
+}
+
+function fillSuffixDecimal()
+{
+    let suffixFilledDecimal = ".0";
+    return suffixFilledDecimal;
+}
+
+function reset()
+{
+    calculatorUI.inputBox.value = "";
+    calculatorManager.currentDisplay = "";
+    calculatorManager.firstNumber = null;
+    calculatorManager.secondNumber = null;
+    calculatorManager.operator = null;
+    calculatorManager.changeState("idle");
 }
 
 // Invalid Input Handling
