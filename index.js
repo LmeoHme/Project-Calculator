@@ -5,42 +5,9 @@ const calculatorUI = {
     buttons: document.querySelector("#buttons"),
 }
 
-const idle = {
-    handleInput: function(input) {
-        switch (inputType.checkInputType(input))
-        {
-            case "operatorButton":
-                this.onOperatorHandling(input);
-                break;
-            case "numberButton":
-                this.onNumberHandling(input);
-                break;
-            case "decimalButton":
-                this.onDecimalHandling();
-                break;
-        }
-    },
-    onOperatorHandling: operator => {
-        if (operator === "-") 
-        {
-            calculatorUI.inputBox.value += operator;
-            calculatorManager.changeState("enteringFirstNumber");
-        }
-    },
-    onNumberHandling: number => {
-        calculatorUI.inputBox.value += number;
-        calculatorManager.currentSate = enteringFirstNumber;
-    },
-    onDecimalHandling: () => {
-        calculatorUI.inputBox.value += fillPrefixDecimal();
-        calculatorManager.changeState("enteringFirstNumber");
-    }
-        
-}
-
 const inputType = {
     specialButton: "RecordsAll clearDelete",
-    numberButton: "1234567890",
+    numberButton: "12345678900",
     decimalButton: ".",
     operatorButton: "+-x/",
 
@@ -71,6 +38,44 @@ const calculatorManager = {
         this.currentSate = state;
     }
 }
+
+const idle = {
+    handleInput: function(input) {
+        switch (inputType.checkInputType(input))
+        {
+            case "operatorButton":
+                this.onOperatorHandling(input);
+                break;
+            case "numberButton":
+                this.onNumberHandling(input);
+                break;
+            case "decimalButton":
+                this.onDecimalHandling();
+                break;
+        }
+    },
+    onOperatorHandling: operator => {
+        if (operator === "-") 
+        {
+            calculatorUI.inputBox.value += operator;
+            calculatorManager.changeState("enteringFirstNumber");
+        }
+    },
+    onNumberHandling: number => {
+        if (number === "00") number = "0";
+        calculatorUI.inputBox.value += number;
+        calculatorManager.changeState("enteringFirstNumber");
+    },
+    onDecimalHandling: () => {
+        calculatorUI.inputBox.value += fillPrefixDecimal();
+        calculatorManager.changeState("enteringFirstNumber");
+    }
+}
+
+const enteringFirstNumber = {
+    
+}
+
 
 // Functions
 function invalidInputHandler()
