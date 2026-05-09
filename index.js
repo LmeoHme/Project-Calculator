@@ -6,12 +6,12 @@ const calculatorUI = {
 }
 
 const inputType = {
-    deleteButton: "Delete",
+    deleteButton: "Backspace",
     allClearButton: "All clear",
     showRecordButton: "Records",
     numberButton: "12345678900",
     decimalButton: ".",
-    operatorButton: "+-x/",
+    operatorButton: "+-x*/",
 
     checkInputType: function(input) {
         if (input === this.deleteButton) return "deleteButton";
@@ -19,7 +19,7 @@ const inputType = {
         else if (input === this.showRecordButton) return "showRecordButton";
         else if (this.numberButton.includes(input)) return "numberButton";
         else if (input === this.decimalButton) return "decimalButton";
-        else return "operatorButton";
+        else if (this.operatorButton.includes(input))return "operatorButton";
     },
 }
 
@@ -199,9 +199,10 @@ function reset()
 // Invalid Input Handling
 const invalidInputHandling = invalidInputHandler();
 
-calculatorUI.inputBox.addEventListener("input", e => {
-    e.preventDefault();
+calculatorUI.inputBox.addEventListener("keydown", e => {
+    calculatorManager.checkState(e.key);
     invalidInputHandling();
+    e.preventDefault();
 });
 
 calculatorUI.inputBox.addEventListener("click", e => {
