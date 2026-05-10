@@ -1,4 +1,14 @@
 // Objects
+const calculator = {
+    "+": (a, b) => a + b,
+    "-": (a, b) => a - b,
+    "x": (a, b) => a * b,
+    "/": (a, b) => {
+        if (b === 0) return "/ᐠ - ˕ -マ Ⳋ Please don't do that";
+        return a / b;
+    },
+}
+
 const calculatorUI = {
     outputBox: document.querySelector("#calculator-screen").firstElementChild,
     inputBox: document.querySelector("#calculator-screen").lastElementChild,
@@ -29,6 +39,7 @@ const calculatorManager = {
     operator: null,
     currentDisplay: "",
     currentSate: "idle",
+    tempResult: null,
     results: [],
 
     checkState: function(input) {
@@ -119,10 +130,8 @@ const enteringFirstNumber = {
     onOperatorHandling: operator => {
         if (calculatorUI.inputBox.value === "-") return;
         if (calculatorManager.currentDisplay.endsWith(".")) fillSuffixDecimal();
-
-        calculatorUI.inputBox.value += operator;
-        calculatorManager.currentDisplay = operator;
         calculatorManager.firstNumber = +calculatorManager.currentDisplay;
+        changeCurrentDisplay(operator);
         calculatorManager.changeState("enteringOperator");
 
         console.log(calculatorManager.currentSate);
@@ -160,17 +169,17 @@ const enteringFirstNumber = {
     onDecimalHandling: decimal => {
         // Consider change this into function
         if (calculatorManager.currentDisplay.includes(".")) return;
-        if (calculatorManager.currentDisplay.includes("-")) 
+        if (calculatorManager.currentDisplay === "-") 
         {
             fillPrefixDecimal();
             return;
         }
         updateScreenDisplay(decimal);
-        
+
         console.log(calculatorManager.currentDisplay);
     }
 }
-    
+
 const enteringOperator = {
     handleInput: function(input) {
         switch (inputType.checkInputType(input))
@@ -230,14 +239,56 @@ const enteringOperator = {
     },
     onNumberHandling: number => {
         if (number === "00") number = "0";
-        updateScreenDisplay(number);
+        calculatorManager.operator = calculatorManager.currentDisplay[0];
+        if (calculatorManager.currentDisplay.length === 2)
+        {
+            calculatorUI.inputBox.value += number;
+            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-2);
+        }
+        else changeCurrentDisplay(number);
+        calculatorManager.secondNumber = +calculatorManager.currentDisplay;
+
+        // Do not show output when didvide 0
+        if (checkDividedByZero(calculatorManager.secondNumber, calculatorManager.operator)) 
+        {
+            calculatorManager.changeState("enteringSecondNumber");
+
+            console.log(calculatorManager.currentSate);
+            console.log(calculatorManager.currentDisplay);
+
+            return;
+        }
+        displayResult();
         calculatorManager.changeState("enteringSecondNumber");
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: decimal => {
-        fillPrefixDecimal();
+        calculatorManager.operator = calculatorManager.currentDisplay[0];
+        if (calculatorManager.currentDisplay.length === 2)
+        {
+            fillPrefixDecimal();
+            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-3);
+        }
+        else 
+        {
+            fillPrefixDecimal();
+            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-2);
+        }
+        calculatorManager.secondNumber = +calculatorManager.currentDisplay;
+
+        // Do not show output when didvide 0
+        if (checkDividedByZero(calculatorManager.secondNumber, calculatorManager.operator)) 
+        {
+            calculatorManager.changeState("enteringSecondNumber");
+
+            console.log(calculatorManager.currentSate);
+            console.log(calculatorManager.currentDisplay);
+
+            return;
+        }
+        displayResult();
         calculatorManager.changeState("enteringSecondNumber");
 
         console.log(calculatorManager.currentSate);
@@ -267,14 +318,23 @@ const enteringSecondNumber = {
         }
     },
     onOperatorHandling: operator => {
-     
+        if (typeof(calculatorUI.outputBox) !== Number);
+        calculatorManager.firstNumber = calculatorManager.results[calculatorManager.results.length - 1];
+        calculatorUI.inputBox.value = calculatorManager.results[calculatorManager.results.length - 1];
+        calculatorUI.outputBox.innerText = "";
+        calculatorManager.results = [];
+        changeCurrentDisplay(operator);
+        calculatorManager.changeState("enteringOperator");
+
+        console.log(calculatorManager.currentDisplay);
+        console.log(calculatorManager.currentSate);
     },
     onDeletionHandling: () => {
         deleteScreenDisplay();
         if (calculatorManager.currentDisplay === "")
         {
-            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice;
-            calculatorManager.changeState("idle");
+            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-1);
+            calculatorManager.changeState("enteringOperator");
 
             console.log(calculatorManager.currentSate);
         }
@@ -288,7 +348,6 @@ const enteringSecondNumber = {
         console.log(calculatorManager.currentDisplay);
     },
     onNumberHandling: number => {
-    // There'll be 1 zero allowed when a number starts with it, but the rule changed when there's a decimal 
         if (!calculatorManager.currentDisplay.includes("."))
         {
             if (calculatorManager.currentDisplay.startsWith("-") && number === "00") number = "0"; 
@@ -296,7 +355,7 @@ const enteringSecondNumber = {
                 calculatorManager.currentDisplay.startsWith("-0")) && number[0] === "0") return;
         }
         updateScreenDisplay(number);
-        
+
         console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: decimal => {
@@ -342,6 +401,7 @@ function fillSuffixDecimal()
 function reset()
 {
     calculatorUI.inputBox.value = "";
+    calculatorUI.outputBox.innerText = "";
     calculatorManager.currentDisplay = "";
     calculatorManager.firstNumber = null;
     calculatorManager.secondNumber = null;
@@ -361,6 +421,31 @@ function deleteScreenDisplay()
     calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -1);
     calculatorManager.currentDisplay = calculatorManager.currentDisplay.slice(0, -1);
 }
+
+function changeCurrentDisplay(value)
+{
+    calculatorUI.inputBox.value += value;
+    calculatorManager.currentDisplay = value;
+}
+
+function calculateResult()
+{
+    calculatorManager.tempResult = calculator[calculatorManager.operator](calculatorManager.firstNumber, calculatorManager.secondNumber);
+    calculatorManager.results.push(calculatorManager.tempResult);
+}
+
+function displayResult()
+{
+    calculateResult();
+    calculatorUI.outputBox.innerText = calculatorManager.results[calculatorManager.results.length - 1];
+}
+
+function checkDividedByZero(number, operator)
+{
+    if (number === 0 && operator === "/") return true;
+    else return false;
+}
+
 // Invalid Input Handling
 const invalidInputHandling = invalidInputHandler();
 
@@ -380,5 +465,6 @@ calculatorUI.buttons.addEventListener("click", e => {
         calculatorManager.checkState(e.target.innerText);
     }
 });
+
 // Align operator to center vertically needs adding a span element with display: inline-flex, will be 
 // applied when implement EnteringOperator state
