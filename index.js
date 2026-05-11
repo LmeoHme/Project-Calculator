@@ -18,10 +18,11 @@ const calculatorUI = {
 const inputType = {
     deleteButton: ["Backspace", "Delete"],
     allClearButton: "All clear",
-    showRecordButton: "Records",
+    showRecordButton: "Records", // Will handle later
     numberButton: "12345678900",
     decimalButton: ".",
     operatorButton: "+-x*/",
+    equalButton: ["=", "Enter"],
 
     checkInputType: function(input) {
         if (this.deleteButton.includes(input)) return "deleteButton";
@@ -29,7 +30,9 @@ const inputType = {
         else if (input === this.showRecordButton) return "showRecordButton";
         else if (this.numberButton.includes(input)) return "numberButton";
         else if (input === this.decimalButton) return "decimalButton";
-        else if (this.operatorButton.includes(input))return "operatorButton";
+        else if (this.operatorButton.includes(input)) return "operatorButton";
+        else if (this.equalButton.includes(input)) return "equalButton";
+        else if (input === this.showRecordButton) return "showRecordButton";
     },
 }
 
@@ -41,6 +44,7 @@ const calculatorManager = {
     currentSate: "idle",
     tempResult: null,
     results: [],
+    records: [],
 
     checkState: function(input) {
         switch (this.currentSate) 
@@ -149,7 +153,7 @@ const enteringFirstNumber = {
         console.log(calculatorManager.currentDisplay);
     },
     onClearAllHandling: () => {
-        reset();
+        resetAll();
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
@@ -222,7 +226,7 @@ const enteringOperator = {
         console.log(calculatorManager.currentDisplay);
     },
     onClearAllHandling: () => {
-        reset();
+        resetAll();
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
@@ -305,6 +309,9 @@ const enteringSecondNumber = {
             case "decimalButton":
                 this.onDecimalHandling(input);
                 break;
+            case "equalButton":
+                this.onEqualHandling();
+                break;
         }
     },
     onOperatorHandling: operator => {
@@ -314,10 +321,10 @@ const enteringSecondNumber = {
             calculatorUI.outputBox.innerText = "/ᐠ - ˕ -マ Can't didvide by 0";
             return;
         }
+        // Consider chagne into function
         calculatorManager.firstNumber = calculatorManager.results[calculatorManager.results.length - 1];
-        calculatorUI.inputBox.value = calculatorManager.results[calculatorManager.results.length - 1];
-        calculatorUI.outputBox.innerText = "";
-        calculatorManager.results = [];
+        resetDisplay();
+        
         changeCurrentDisplay(operator);
         calculatorManager.changeState("enteringOperator");
 
@@ -340,7 +347,7 @@ const enteringSecondNumber = {
         console.log(calculatorManager.currentDisplay);
     },
     onClearAllHandling: () => {
-        reset();
+        resetAll();
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
@@ -352,12 +359,63 @@ const enteringSecondNumber = {
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
         displayResult();
 
+        console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: decimal => {
         if (checkPersistentDecimal(calculatorManager.currentDisplay)) return;
         updateInputDisplay(decimal);
         
+        console.log(calculatorManager.currentSate);
+        console.log(calculatorManager.currentDisplay);
+    },
+    onEqualHandling: () => {
+        swapInputOutputVisual();
+        calculatorManager.changeState("result");
+
+        console.log(calculatorManager.currentSate);
+        console.log(calculatorManager.currentDisplay);
+    }
+}
+
+const result = {
+    handleInput: function(input) {
+        switch (inputType.checkInputType(input))
+        {
+            case "operatorButton":
+                this.onOperatorHandling(input);
+                break;
+            case "numberButton":
+                this.onNumberHandling(input);
+                break;
+            case "decimalButton":
+                this.onDecimalHandling();
+                break;
+        }
+    },
+    onOperatorHandling: operator => {
+        if (operator === "-") 
+        {
+            updateInputDisplay(operator);
+            calculatorManager.changeState("enteringFirstNumber");
+
+            console.log(calculatorManager.currentSate);
+            console.log(calculatorManager.currentDisplay);
+        }
+    },
+    onNumberHandling: number => {
+        if (number === "00") number = "0";
+        updateInputDisplay(number);
+        calculatorManager.changeState("enteringFirstNumber");
+
+        console.log(calculatorManager.currentSate);
+        console.log(calculatorManager.currentDisplay);
+    },
+    onDecimalHandling: () => {
+        fillPrefixDecimal();
+        calculatorManager.changeState("enteringFirstNumber");
+
+        console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     }
 }
@@ -388,7 +446,7 @@ function fillSuffixDecimal()
     updateInputDisplay(suffixFilledDecimal);
 }
 
-function reset()
+function resetAll()
 {
     calculatorUI.inputBox.value = "";
     calculatorUI.outputBox.innerText = "";
@@ -423,6 +481,7 @@ function calculateResult()
     calculatorManager.tempResult = calculator[calculatorManager.operator](calculatorManager.firstNumber, calculatorManager.secondNumber);
     if (calculatorManager.tempResult === "ERROR") return;
     calculatorManager.results.push(calculatorManager.tempResult);
+    updateRecords();
 }
 
 function displayResult()
@@ -474,6 +533,32 @@ function updateOutputDisplay()
         return;
     }
     calculatorUI.outputBox.innerText = calculatorManager.results[calculatorManager.results.length - 1];
+}
+
+function updateRecords()
+{
+    const record = {
+        calculation: "",
+        result: "",
+    };
+    record.calculation = calculatorUI.inputBox.value;
+    record.result = calculatorManager.tempResult;
+    calculatorManager.records.push(record);
+
+    console.log(calculatorManager.records);
+}
+
+function resetDisplay()
+{
+    calculatorUI.inputBox.value = calculatorManager.results[calculatorManager.results.length - 1];
+    calculatorUI.outputBox.innerText = "";
+    calculatorManager.results = [];
+}
+
+function swapInputOutputVisual()
+{
+    calculatorUI.inputBox.setAttribute("style", "opacity: .5; font-size: 24px");
+    calculatorUI.outputBox.setAttribute("style", "opacity: 1; font-size: 36px");
 }
 // Invalid Input Handling
 const invalidInputHandling = invalidInputHandler();

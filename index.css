@@ -81,16 +81,20 @@ main {
 .screen .screen-outputBox {
     flex: 1 50%;
     color: rgb(0, 0, 0);
-    font-size: 36px;
     font-weight: 600;
     padding: 0 8px;
 }
 
-.screen .screen-inputBox {
+.screen .screen-inputBox
+{
+    font-size: 36px;
 }
+
 .screen .screen-outputBox {
     justify-content: flex-end;
     align-items: flex-end;
+    font-size: 24px;
+    opacity: .5;
 }
 
 .buttons {
