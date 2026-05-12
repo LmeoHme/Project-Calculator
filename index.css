@@ -18,7 +18,7 @@ input {
     background-color: transparent;
     font-family: inherit;
     font-size: inherit;
-    text-align: right;   
+    text-align: right; 
 }
 
 body,
@@ -28,13 +28,16 @@ li,
 .screen-outputBox,
 .buttons,
 .special-buttons,
-.number-buttons,
+.list-container,
+.list-item,
+.numbers-list,
 .operator-buttons {
     display: flex;
 }
 
 main,
 .screen,
+.list-item,
 .operator-buttons {
     flex-flow: column;
 }
@@ -87,13 +90,14 @@ main {
 
 .screen .screen-inputBox
 {
-    font-size: 36px;
+    width: 444px;
+    font-size: 48px;
 }
 
 .screen .screen-outputBox {
     justify-content: flex-end;
-    align-items: flex-end;
-    font-size: 24px;
+    align-items: flex-start;
+    font-size: 36px;
     opacity: .5;
 }
 
@@ -112,14 +116,51 @@ main {
     background-color: rgb(39,124,165);
     margin-bottom: 16px;
 }
-.number-buttons {
+.list-container {
+    max-height: 464px;
+    width: 344px;
+    flex-flow: column-reverse;
+    gap: 8px;
+    overflow-y: auto;
+
+    /* Don't know how it works but these will hide the visual of the scrollbar. */
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    scrollbar-width: none;
+
+    -ms-overflow-style: none;
+}
+.list-container .list-item {
+    flex: 1;
+    align-items: flex-start;
+    width: auto;
+    height: auto;
+    background-color: rgb(162,187,207);
+    border-radius: 20px;
+    padding: 8px 16px;
+}
+.list-container .list-item .calculation-value {
+    font-size: 24px;
+    opacity: .6;
+}
+.list-container .list-item .result-value {
+    font-size: 36px;
+    font-weight: 600;
+}
+.list-container .list-item .date-value {
+    font-size: 16px;
+    opacity: .4;
+}
+.numbers-list {
     flex-flow: wrap;
     gap: 16px;
     justify-content: space-between;
     align-content: space-between;
     margin-bottom: 16px;
 }
-.number-buttons li {
+.numbers-list li {
     background-color: rgb(162,187,207);
 }
 .operator-buttons {

@@ -11,15 +11,17 @@ const calculator = {
 }
 
 const calculatorUI = {
-    outputBox: document.querySelector("#calculator-screen").firstElementChild,
-    inputBox: document.querySelector("#calculator-screen").lastElementChild,
+    inputBox: document.querySelector("#calculator-screen").firstElementChild,
+    outputBox: document.querySelector("#calculator-screen").lastElementChild,
     buttons: document.querySelector("#buttons"),
+    recordsList: document.querySelector("#records-list"),
+    numberButtons: document.querySelector("#number-buttons"),
 }
 
 const inputType = {
     deleteButton: ["Backspace", "Delete"],
     allClearButton: "All clear",
-    showRecordButton: "Records",
+    showRecordsButton: "Records",
     numberButton: "12345678900",
     decimalButton: ".",
     operatorButton: "+-x*/",
@@ -28,12 +30,12 @@ const inputType = {
     checkInputType: function(input) {
         if (this.deleteButton.includes(input)) return "deleteButton";
         else if (input === this.allClearButton) return "allClearButton";
-        else if (input === this.showRecordButton) return "showRecordButton";
+        else if (input === this.showRecordsButton) return "showRecordsButton";
         else if (this.numberButton.includes(input)) return "numberButton";
         else if (input === this.decimalButton) return "decimalButton";
         else if (this.operatorButton.includes(input)) return "operatorButton";
         else if (this.equalButton.includes(input)) return "equalButton";
-        else if (input === this.showRecordButton) return "showRecordButton";
+        else if (input === this.showRecordsButton) return "showRecordsButton";
     },
 }
 
@@ -85,6 +87,9 @@ const idle = {
             case "decimalButton":
                 this.onDecimalHandling();
                 break;
+            case "showRecordsButton":
+                this.onShowRecordsHandling();
+                break;
         }
     },
     onOperatorHandling: operator => {
@@ -98,6 +103,11 @@ const idle = {
         }
     },
     onNumberHandling: number => {
+        if (displayRecords.isToggleOn) 
+        {
+            onRecordsResultHandling();
+            return;
+        }
         if (number === "00") number = "0";
         updateInputDisplay(number);
         calculatorManager.changeState("enteringFirstNumber");
@@ -105,13 +115,19 @@ const idle = {
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
+    onRecordsResultHandling: () => {
+
+    },
     onDecimalHandling: () => {
         fillPrefixDecimal();
         calculatorManager.changeState("enteringFirstNumber");
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
-    }
+    },
+    onShowRecordsHandling: () => {
+        displayRecords.checkRecordsLength();
+    },
 }
 
 const enteringFirstNumber = {
@@ -133,13 +149,16 @@ const enteringFirstNumber = {
             case "decimalButton":
                 this.onDecimalHandling(input);
                 break;
+            case "showRecordsButton":
+                this.onShowRecordsHandling();
+                break;
         }
     },
     onOperatorHandling: operator => {
         if (calculatorUI.inputBox.value === "-") return;
         if (calculatorManager.currentDisplay.endsWith(".")) fillSuffixDecimal();
         calculatorManager.firstNumber = +calculatorManager.currentDisplay;
-        changeCurrentDisplay(operator);
+        changeCurrentDisplayValue(operator);
         calculatorManager.changeState("enteringOperator");
 
         console.log(calculatorManager.currentSate);
@@ -175,7 +194,10 @@ const enteringFirstNumber = {
         updateInputDisplay(decimal);
 
         console.log(calculatorManager.currentDisplay);
-    }
+    },
+    onShowRecordsHandling: () => {
+        displayRecords.checkRecordsLength();
+    },
 }
 
 const enteringOperator = {
@@ -196,6 +218,9 @@ const enteringOperator = {
                 break;
             case "decimalButton":
                 this.onDecimalHandling();
+                break;
+            case "showRecordsButton":
+                this.onShowRecordsHandling();
                 break;
         }
     },
@@ -246,7 +271,7 @@ const enteringOperator = {
             calculatorUI.inputBox.value += number;
             calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-2);
         }
-        else changeCurrentDisplay(number);
+        else changeCurrentDisplayValue(number);
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
 
         // Do not show output when didvide 0
@@ -294,7 +319,10 @@ const enteringOperator = {
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
-    }
+    },
+    onShowRecordsHandling: () => {
+        displayRecords.checkRecordsLength();
+    },
 }
 
 const enteringSecondNumber = {
@@ -319,6 +347,9 @@ const enteringSecondNumber = {
             case "equalButton":
                 this.onEqualHandling();
                 break;
+            case "showRecordsButton":
+                this.onShowRecordsHandling();
+                break;
         }
     },
     onOperatorHandling: operator => {
@@ -329,7 +360,7 @@ const enteringSecondNumber = {
             return;
         }
         updateFirstNumberValue();
-        changeCurrentDisplay(operator);
+        changeCurrentDisplayValue(operator);
         calculatorManager.changeState("enteringOperator");
 
         console.log(calculatorManager.currentDisplay);
@@ -384,7 +415,10 @@ const enteringSecondNumber = {
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
-    }
+    },
+    onShowRecordsHandling: () => {
+        displayRecords.checkRecordsLength();
+    },
 }
 
 const result = {
@@ -406,12 +440,15 @@ const result = {
             case "decimalButton":
                 this.onDecimalHandling();
                 break;
+            case "showRecordsButton":
+                this.onShowRecordsHandling();
+                break;
         }
     },
     onOperatorHandling: operator => {
         resetInputOutputVisual();
         updateFirstNumberValue();
-        changeCurrentDisplay(operator);
+        changeCurrentDisplayValue(operator);
         calculatorManager.changeState("enteringOperator");
 
         console.log(calculatorManager.currentSate);
@@ -431,7 +468,6 @@ const result = {
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
-
     onNumberHandling: number => {
         resetAll();
         calculatorManager.changeState("idle");
@@ -447,9 +483,96 @@ const result = {
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
+    },
+    onShowRecordsHandling: () => {
+        displayRecords.checkRecordsLength();
+    },
+}
+
+const displayRecords = {
+    isToggleOn: false,
+    handleInput: function(input) {
+        switch (inputType.checkInputType(input))
+        {
+            case "operatorButton":
+                this.onOperatorHandling(input);
+                break;
+            case "deleteButton":
+                this.onDeletionHandling();
+                break;
+            case "allClearButton":
+                this.onClearAllHandling();
+                break;
+            case "numberButton":
+                this.onNumberHandling(input);
+                break;
+            case "showRecordsButton":
+                this.checkRecordsLength();
+                break;
+        }
+    },
+    onOperatorHandling: input => {
+        calculatorManager.changeState("idle");
+        idle.onOperatorHandling(input);
+    },
+    // Works but have bugs, need to fix
+    checkRecordsLength: function() {
+        switch (calculatorManager.records.length)
+        {
+            case 0:
+                createEmptyRecordsList();
+                this.checkEmptyListState();
+                break;
+            default:
+                this.checkListState();
+                break;        
+        }
+    },
+    checkEmptyListState: function() {
+        if (!this.isToggleOn)
+        {
+            this.toggleEmptyListOn();
+            this.isToggleOn = true;
+        }
+        else 
+        {
+            this.toggleEmptyListOff();
+            this.isToggleOn = false;
+        }
+    },
+    toggleEmptyListOn: () => {
+        calculatorUI.recordsList.removeAttribute("style");
+        calculatorUI.numberButtons.style.display = "none";
+        calculatorUI.recordsList.firstElementChild.style.display = "flex";
+    },
+    toggleEmptyListOff: () => {
+        calculatorUI.recordsList.style.display = "none";
+        calculatorUI.numberButtons.removeAttribute("style");
+        calculatorUI.recordsList.firstElementChild.style.display = "none";
+    },
+    checkListState: function() {
+        if (!this.isToggleOn)
+        {
+            this.toggleDisplayOn();
+            this.isToggleOn = true;
+        }
+        else 
+        {
+            this.toggleDisplayOff();
+            this.isToggleOn = false;
+        }
+    },
+    toggleDisplayOn: () => {
+        calculatorUI.recordsList.removeAttribute("style");
+        calculatorUI.numberButtons.style.display = "none";
+    },
+    toggleDisplayOff: () => {
+        calculatorUI.recordsList.style.display = "none";
+        calculatorUI.numberButtons.removeAttribute("style");
     }
 }
 
+const calculatedDate = new Date();
 // Functions
 
     // Input Handling Supports
@@ -518,6 +641,7 @@ function resetInputOutputVisual()
 }
 
     // Display Handling Supports
+        // Input
 function updateInputDisplay(value)
 {
     calculatorUI.inputBox.value += value;
@@ -530,23 +654,12 @@ function deleteInputDisplay()
     calculatorManager.currentDisplay = calculatorManager.currentDisplay.slice(0, -1);
 }
 
-function changeCurrentDisplay(value)
+function changeCurrentDisplayValue(value)
 {
     calculatorUI.inputBox.value += value;
     calculatorManager.currentDisplay = value;
 }
-
-function displayResult()
-{
-    calculateResult();
-    if (calculatorManager.results[calculatorManager.results.length - 1] === undefined)
-    {
-        calculatorUI.outputBox.innerText = "";
-        return;
-    }
-    calculatorUI.outputBox.innerText = calculatorManager.results[calculatorManager.results.length - 1];
-}
-
+        // Output
 function updateOutputDisplay()
 {
     calculatorManager.results.pop();
@@ -560,8 +673,53 @@ function updateOutputDisplay()
 
 function swapInputOutputVisual()
 {
-    calculatorUI.inputBox.setAttribute("style", "opacity: .5; font-size: 24px");
-    calculatorUI.outputBox.setAttribute("style", "opacity: 1; font-size: 36px");
+    calculatorUI.inputBox.setAttribute("style", "opacity: .5; font-size: 36px");
+    calculatorUI.outputBox.setAttribute("style", "opacity: 1; font-size: 48px");
+}
+        // Result
+function displayResult()
+{
+    calculateResult();
+    if (calculatorManager.results[calculatorManager.results.length - 1] === undefined)
+    {
+        calculatorUI.outputBox.innerText = "";
+        return;
+    }
+    calculatorUI.outputBox.innerText = calculatorManager.results[calculatorManager.results.length - 1];
+}
+
+    // Records Handling Supports
+function createRecordsListItem(record)
+{
+    const listItem = document.createElement("li");
+    const itemCalculationValue = document.createElement("p");
+    const itemResultValue = document.createElement("p");
+    const itemDateValue = document.createElement("p");
+
+    listItem.classList.toggle("list-item");
+    itemCalculationValue.classList.toggle("calculation-value");
+    itemResultValue.classList.toggle("result-value");
+    itemDateValue.classList.toggle("date-value");
+    
+    itemCalculationValue.innerText = record.calculation;
+    itemResultValue.innerText = record.result;
+    itemDateValue.innerText = record.date;
+
+    listItem.appendChild(itemCalculationValue);
+    listItem.appendChild(itemResultValue);
+    listItem.appendChild(itemDateValue);
+    calculatorUI.recordsList.appendChild(listItem);
+}
+
+function createEmptyRecordsList()
+{
+    if (calculatorUI.recordsList.children.length > 0) return;
+    const MESSAGE = "The record is empty, do some calculation to fill it ≽^•⩊•^≼"
+    const emptyList = document.createElement("p");
+    emptyList.classList.toggle("list-item");
+    emptyList.setAttribute("style", "font-size: 26px; display: none");
+    emptyList.innerText = MESSAGE;
+    calculatorUI.recordsList.appendChild(emptyList);
 }
 
     // Zero Handling Supports
@@ -589,10 +747,12 @@ function updateRecords()
     const record = {
         calculation: "",
         result: "",
+        date: `${calculatedDate.getFullYear()}/${(calculatedDate.getMonth() + 1).toString().padStart(2, "0")}/${calculatedDate.getDate()}`,
     };
     record.calculation = calculatorUI.inputBox.value;
     record.result = calculatorManager.tempResult;
     calculatorManager.records.push(record);
+    createRecordsListItem(record);
 
     console.log(calculatorManager.records);
 }
@@ -620,21 +780,30 @@ calculatorUI.inputBox.addEventListener("click", e => {
 });
 
 calculatorUI.inputBox.addEventListener("keydown", e => {
+    e.target.scrollLeft = e.target.scrollWidth;
+    console.log(e.target.scrollLeft);
+    console.log(e.target.scrollWidth);
+
     calculatorManager.checkState(e.key);
     invalidInputHandling();
     e.preventDefault();
 });
 
+calculatorUI.inputBox.addEventListener("focus", e => {
+    e.target.scrollLeft = e.target.scrollWidth;
+    console.log(e.target.scrollLeft);
+    console.log(e.target.scrollWidth);
+})
+
 calculatorUI.buttons.addEventListener("click", e => {
     if (e.target && e.target.nodeName === "LI")
     {
-        if (e.target.innerText === inputType.showRecordButton)
-        {
-            
-        }
         calculatorManager.checkState(e.target.innerText);
     }
 });
 
-// Align operator to center vertically needs adding a span element with display: inline-flex, will be 
-// applied when implement EnteringOperator state
+calculatorUI.recordsList.style.display = "none";
+
+// Align operator to center vertically needs adding a span element with display: inline-flex, will be applied when implement EnteringOperator state
+// Problems can't solve due to lack of knowledge: 
+// - Snap to the end of input if it's too long
