@@ -36,6 +36,7 @@ const inputType = {
         else if (this.operatorButton.includes(input)) return "operatorButton";
         else if (this.equalButton.includes(input)) return "equalButton";
         else if (input === this.showRecordsButton) return "showRecordsButton";
+        else return "recordsResultButton";
     },
 }
 
@@ -90,6 +91,9 @@ const idle = {
             case "showRecordsButton":
                 this.onShowRecordsHandling();
                 break;
+            case "recordsResultButton":
+                this.onRecordsResultHandling(input);
+                break;
         }
     },
     onOperatorHandling: operator => {
@@ -103,20 +107,12 @@ const idle = {
         }
     },
     onNumberHandling: number => {
-        if (displayRecords.isToggleOn) 
-        {
-            onRecordsResultHandling();
-            return;
-        }
         if (number === "00") number = "0";
         updateInputDisplay(number);
         calculatorManager.changeState("enteringFirstNumber");
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
-    },
-    onRecordsResultHandling: () => {
-
     },
     onDecimalHandling: () => {
         fillPrefixDecimal();
@@ -127,6 +123,11 @@ const idle = {
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
+    },
+    onRecordsResultHandling: (input) => {
+        let filteredValue = input.split("\n")[2];
+        updateInputDisplay(filteredValue);
+        calculatorManager.changeState("enteringFirstNumber");
     },
 }
 
@@ -354,7 +355,7 @@ const enteringSecondNumber = {
     },
     onOperatorHandling: operator => {
     // When an operator inserted during this state, the result displaying in the output box will become the value of the firstNumber for next calculation.calculator.errormessage displayed if the value of secondNumber is 0.
-        if (calculatorManager.results[calculatorManager.results.length - 1] === undefined)
+        if (calculatorManager.results[0] === undefined)
         {
             calculatorUI.outputBox.innerText = "/ᐠ - ˕ -マ Can't didvide by 0";
             return;
@@ -405,7 +406,7 @@ const enteringSecondNumber = {
         console.log(calculatorManager.currentDisplay);
     },
     onEqualHandling: () => {
-        if (calculatorManager.results[calculatorManager.results.length - 1] === undefined)
+        if (calculatorManager.results[0] === undefined)
         {
             calculatorUI.outputBox.innerText = "/ᐠ - ˕ -マ Can't didvide by 0";
             return;
@@ -629,7 +630,7 @@ function resetAll()
 
 function resetDisplay()
 {
-    calculatorUI.inputBox.value = calculatorManager.results[calculatorManager.results.length - 1];
+    calculatorUI.inputBox.value = calculatorManager.results[0];
     calculatorUI.outputBox.innerText = "";
     calculatorManager.results = [];
 }
@@ -662,13 +663,13 @@ function changeCurrentDisplayValue(value)
         // Output
 function updateOutputDisplay()
 {
-    calculatorManager.results.pop();
+    calculatorManager.results.shift();
     if (calculatorManager.results.length === 0)
     {
         calculatorUI.outputBox.innerText = "";
         return;
     }
-    calculatorUI.outputBox.innerText = calculatorManager.results[calculatorManager.results.length - 1];
+    calculatorUI.outputBox.innerText = calculatorManager.results[0];
 }
 
 function swapInputOutputVisual()
@@ -680,12 +681,12 @@ function swapInputOutputVisual()
 function displayResult()
 {
     calculateResult();
-    if (calculatorManager.results[calculatorManager.results.length - 1] === undefined)
+    if (calculatorManager.results[0] === undefined)
     {
         calculatorUI.outputBox.innerText = "";
         return;
     }
-    calculatorUI.outputBox.innerText = calculatorManager.results[calculatorManager.results.length - 1];
+    calculatorUI.outputBox.innerText = calculatorManager.results[0];
 }
 
     // Records Handling Supports
@@ -705,10 +706,10 @@ function createRecordsListItem(record)
     itemResultValue.innerText = record.result;
     itemDateValue.innerText = record.date;
 
-    listItem.appendChild(itemCalculationValue);
-    listItem.appendChild(itemResultValue);
-    listItem.appendChild(itemDateValue);
-    calculatorUI.recordsList.appendChild(listItem);
+    listItem.prepend(itemCalculationValue);
+    listItem.prepend(itemResultValue);
+    listItem.prepend(itemDateValue);
+    calculatorUI.recordsList.prepend(listItem);
 }
 
 function createEmptyRecordsList()
@@ -719,7 +720,7 @@ function createEmptyRecordsList()
     emptyList.classList.toggle("list-item");
     emptyList.setAttribute("style", "font-size: 26px; display: none");
     emptyList.innerText = MESSAGE;
-    calculatorUI.recordsList.appendChild(emptyList);
+    calculatorUI.recordsList.prepend(emptyList);
 }
 
     // Zero Handling Supports
@@ -761,14 +762,14 @@ function calculateResult()
 {
     calculatorManager.tempResult = calculator[calculatorManager.operator](calculatorManager.firstNumber, calculatorManager.secondNumber);
     if (calculatorManager.tempResult === calculator.error) return;
-    calculatorManager.results.push(calculatorManager.tempResult);
+    calculatorManager.results.unshift(calculatorManager.tempResult);
     updateRecords();
 }
 
     //
 function updateFirstNumberValue()
 {
-    calculatorManager.firstNumber = calculatorManager.results[calculatorManager.results.length - 1];
+    calculatorManager.firstNumber = calculatorManager.results[0];
     resetDisplay();
 }
 

@@ -18,7 +18,7 @@ input {
     background-color: transparent;
     font-family: inherit;
     font-size: inherit;
-    text-align: right; 
+    text-align: right;   
 }
 
 body,
@@ -37,6 +37,7 @@ li,
 
 main,
 .screen,
+.list-container,
 .list-item,
 .operator-buttons {
     flex-flow: column;
@@ -90,7 +91,6 @@ main {
 
 .screen .screen-inputBox
 {
-    width: 444px;
     font-size: 48px;
 }
 
@@ -119,7 +119,6 @@ main {
 .list-container {
     max-height: 464px;
     width: 344px;
-    flex-flow: column-reverse;
     gap: 8px;
     overflow-y: auto;
 
