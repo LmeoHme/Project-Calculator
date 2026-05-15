@@ -40,7 +40,6 @@ const inputType = {
         else if (this.operatorButton.includes(input)) return "operatorButton";
         else if (this.equalButton.includes(input)) return "equalButton";
         else if (input === this.showRecordsButton) return "showRecordsButton";
-        else return "recordsResultButton";
     },
 }
 
@@ -96,9 +95,6 @@ const idle = {
             case "showRecordsButton":
                 this.onShowRecordsHandling();
                 break;
-            case "recordsResultButton":
-                this.onRecordsResultHandling(input);
-                break;
         }
     },
     onOperatorHandling: operator => {
@@ -133,10 +129,6 @@ const idle = {
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
     },
-    onRecordsResultHandling: function(input) {
-        let filteredValue = input.split("\n")[2];
-        this.onNumberHandling(filteredValue);
-    },
 }
 
 const enteringFirstNumber = {
@@ -160,9 +152,6 @@ const enteringFirstNumber = {
                 break;
             case "showRecordsButton":
                 this.onShowRecordsHandling();
-                break;
-            case "recordsResultButton":
-                this.onRecordsResultHandling(input);
                 break;
         }
     },
@@ -200,7 +189,7 @@ const enteringFirstNumber = {
     },
     onNumberHandling: number => {
     // There'll be 1 zero allowed when a number starts with it, but the rule changed when there's a decimal 
-        if (isFirstOnlyZero(calculatorManager.currentDisplay, number)) return;
+        if (isPersitentFirstOnlyZero(calculatorManager.currentDisplay, number)) return;
         if (calculatorManager.currentDisplay.startsWith(MINUS_OPERATOR) && number === DOUBLE_ZERO && !calculatorManager.isPersistentDecimal) number = ZERO; 
         updateInputDisplay(number);
 
@@ -223,12 +212,6 @@ const enteringFirstNumber = {
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
-    },
-    onRecordsResultHandling: function(input) {
-        calculatorUI.inputBox.value = EMPTY_STRING;
-        calculatorManager.currentDisplay = EMPTY_STRING;
-        let filteredValue = input.split("\n")[2];
-        this.onNumberHandling(filteredValue);
     },
 }
 
@@ -253,12 +236,6 @@ const enteringOperator = {
                 break;
             case "showRecordsButton":
                 this.onShowRecordsHandling();
-                break;
-            case "recordsResultButton":
-                this.onRecordsResultHandling(input);
-                break;
-            case "recordsResultButton":
-                this.onRecordsResultHandling(input);
                 break;
         }
     },
@@ -315,7 +292,6 @@ const enteringOperator = {
         else changeTrackerValue(number);
         if (calculatorManager.isPersistentDecimal) calculatorManager.isPersistentDecimal = false;
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
-        if (isNaN(calculatorManager.secondNumber)) return;
         displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
         calculatorManager.changeState("enteringSecondNumber");
 
@@ -345,10 +321,6 @@ const enteringOperator = {
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
     },
-    onRecordsResultHandling: function(input) {
-        let filteredValue = input.split("\n")[2];
-        this.onNumberHandling(filteredValue);
-    },
 }
 
 const enteringSecondNumber = {
@@ -375,9 +347,6 @@ const enteringSecondNumber = {
                 break;
             case "showRecordsButton":
                 this.onShowRecordsHandling();
-                break;
-            case "recordsResultButton":
-                this.onRecordsResultHandling(input);
                 break;
         }
     },
@@ -412,7 +381,7 @@ const enteringSecondNumber = {
         {
             calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-1);
             calculatorManager.secondNumber = null;
-            calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber)
+            calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber);
             calculatorManager.changeState("enteringOperator");
 
             console.log(calculatorManager.currentSate);
@@ -420,18 +389,15 @@ const enteringSecondNumber = {
         }
         if (displayRecords.isToggleOn)
         {
-            if (calculatorManager.currentDisplay.includes(MINUS_OPERATOR))
+            if (calculatorManager.currentDisplay === MINUS_OPERATOR && calculatorManager.secondNumber === null)
             {
-                calculatorManager.results = [];
-                calculatorManager.secondNumber = null;
-                calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber)
-                updateOutputDisplay();
+                console.log(calculatorManager.currentSate);
+                console.log(calculatorManager.currentDisplay);
+
+                return;
             }
-            else
-            {
-                calculatorManager.secondNumber = +calculatorManager.currentDisplay;
-                displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
-            }
+            calculatorManager.secondNumber = +calculatorManager.currentDisplay;
+            displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
 
             console.log(calculatorManager.results);
         }
@@ -453,7 +419,7 @@ const enteringSecondNumber = {
         console.log(calculatorManager.currentDisplay);
     },
     onNumberHandling: number => {
-        if (isFirstOnlyZero(calculatorManager.currentDisplay, number)) return;
+        if (isPersitentFirstOnlyZero(calculatorManager.currentDisplay, number)) return;
         if (calculatorManager.currentDisplay.startsWith(MINUS_OPERATOR) && number === DOUBLE_ZERO && !calculatorManager.isPersistentDecimal) number = ZERO; 
         updateInputDisplay(number);
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
@@ -478,9 +444,13 @@ const enteringSecondNumber = {
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
-    // 9/-0 = not desired logic
     onEqualHandling: () => {
-        if (typeof(calculatorManager.secondNumber) !== "number") return;
+        if (error.calculationError(calculatorManager.tempResult)) 
+        {
+            displayResult(errorMessage.calculationError);
+            return;
+        }
+        if (typeof(calculatorManager.secondNumber) !== "number" || isNaN(calculatorManager.secondNumber)) return;
         if (isDividedByZero(calculatorManager.tempResult))
         {
             errorMessage.dividedByZero();
@@ -495,11 +465,6 @@ const enteringSecondNumber = {
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
-    },
-    onRecordsResultHandling: function(input) {
-        resetAll();
-        let filteredValue = input.split("\n")[2];
-        idle.onNumberHandling(filteredValue);
     },
 }
 
@@ -570,7 +535,7 @@ const result = {
         displayRecords.checkRecordsLength();
     },
 }
-// Not finished yet
+
 const displayRecords = {
     isToggleOn: false,
     handleInput: function(input) {
@@ -597,7 +562,6 @@ const displayRecords = {
         calculatorManager.changeState("idle");
         idle.onOperatorHandling(input);
     },
-    // Works but have bugs, need to fix
     checkRecordsLength: function() {
         switch (calculatorManager.records.length)
         {
@@ -763,7 +727,7 @@ function swapInputOutputVisual()
         // Result
 function calculateResult(operator, firstNumber, secondNumber)
 {
-    if (!isFinite(secondNumber)) return errorMessage.calculationError;
+    // if (!isFinite(secondNumber)) return errorMessage.calculationError;
     calculatorManager.tempResult = calculator[operator](firstNumber, secondNumber);
     if (isDividedByZero(calculatorManager.tempResult) || error.calculationError(calculatorManager.tempResult))
     {
@@ -774,15 +738,7 @@ function calculateResult(operator, firstNumber, secondNumber)
 
 function displayResult(value)
 {
-    if (value === EMPTY_STRING)
-    {
-        calculatorUI.outputBox.innerText = value;
-
-        console.log(calculatorManager.results);
-
-        return;
-    }
-    if (value === error.calculationError)
+    if (typeof(value) !== "number")
     {
         calculatorUI.outputBox.innerText = value;
 
@@ -831,7 +787,7 @@ function createEmptyRecordsList()
 }
 
     // Zero Handling Supports
-function isFirstOnlyZero(tracker, number)
+function isPersitentFirstOnlyZero(tracker, number)
 {
     if (!tracker.includes(DECIMAL))
     {
@@ -866,7 +822,7 @@ function updateRecords()
     console.log(calculatorManager.records);
 }
 
-    //
+    // Number's Values Handling Supports
 function updateFirstNumber()
 {
     calculatorManager.firstNumber = calculatorManager.results[0];
