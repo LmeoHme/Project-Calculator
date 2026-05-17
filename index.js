@@ -1,4 +1,5 @@
 const multiplyOperator = ["x", "*"];
+const DIVIDE_OPERATOR = "/";
 const MINUS_OPERATOR = "-";
 const ZERO = "0";
 const DOUBLE_ZERO = "00";
@@ -100,7 +101,7 @@ const idle = {
     onOperatorHandling: operator => {
         if (operator === MINUS_OPERATOR) 
         {
-            updateInputDisplay(operator);
+            screenDisplayHandler.updateInputDisplay(operator);
             calculatorManager.changeState("enteringFirstNumber");
 
             console.log(calculatorManager.currentSate);
@@ -109,7 +110,7 @@ const idle = {
     },
     onNumberHandling: number => {
         if (number === DOUBLE_ZERO) number = ZERO;
-        updateInputDisplay(number);
+        screenDisplayHandler.updateInputDisplay(number);
         calculatorManager.changeState("enteringFirstNumber");
 
         console.log(calculatorManager.currentSate);
@@ -159,14 +160,14 @@ const enteringFirstNumber = {
         if (calculatorUI.inputBox.value === MINUS_OPERATOR) return;
         if (calculatorManager.currentDisplay.endsWith(DECIMAL)) fillSuffixDecimalWithZero();
         calculatorManager.firstNumber = +calculatorManager.currentDisplay;
-        changeTrackerValue(operator);
+        screenDisplayHandler.changeTrackerValue(operator);
         calculatorManager.changeState("enteringOperator");
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDeletionHandling: () => {
-        deleteInputDisplay();
+        screenDisplayHandler.deleteInputDisplay();
         if (!calculatorManager.currentDisplay.includes(DECIMAL) && calculatorManager.isPersistentDecimal) calculatorManager.isPersistentDecimal = false;
         if (calculatorManager.currentDisplay === EMPTY_STRING)
         {
@@ -189,14 +190,15 @@ const enteringFirstNumber = {
     },
     onNumberHandling: number => {
     // There'll be 1 zero allowed when a number starts with it, but the rule changed when there's a decimal 
-        if (isPersitentFirstOnlyZero(calculatorManager.currentDisplay, number)) return;
-        if (calculatorManager.currentDisplay.startsWith(MINUS_OPERATOR) && number === DOUBLE_ZERO && !calculatorManager.isPersistentDecimal) number = ZERO; 
-        updateInputDisplay(number);
+        if (operandHandler.isPersitentFirstZero(calculatorManager.currentDisplay, number)) return;
+        if (operandHandler.isFirstZeroAfterOperator(calculatorManager.currentDisplay, number)) number = ZERO; 
+        screenDisplayHandler.updateInputDisplay(number);
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: decimal => {
+        if (calculatorManager.currentDisplay.includes(DECIMAL)) calculatorManager.isPersistentDecimal = true;
         if (calculatorManager.isPersistentDecimal) return;
         if (calculatorManager.currentDisplay === MINUS_OPERATOR) 
         {
@@ -204,7 +206,7 @@ const enteringFirstNumber = {
             calculatorManager.isPersistentDecimal = true;
             return;
         }
-        updateInputDisplay(decimal);
+        screenDisplayHandler.updateInputDisplay(decimal);
         calculatorManager.isPersistentDecimal = true;
         
         console.log(calculatorManager.currentSate);
@@ -240,27 +242,24 @@ const enteringOperator = {
         }
     },
     onOperatorHandling: operator => {
-        if ((multiplyOperator.includes(calculatorManager.currentDisplay) || calculatorManager.currentDisplay === "/") && operator === MINUS_OPERATOR)
+        if (operatorHandler.isStackalbeOperator(calculatorManager.currentDisplay, operator))
         {
-            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-1) + operator;
-            calculatorUI.inputBox.value += operator;
+            operatorHandler.stackOperator(operator);
         }
-        else if (calculatorManager.currentDisplay.length === 2) 
+        else if (operatorHandler.isStackingOperator(calculatorManager.currentDisplay)) 
         {
-            calculatorManager.currentDisplay = operator;
-            calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -2) + calculatorManager.currentDisplay;
+            operatorHandler.changeStackingOperator(operator);
         }
-        else if (calculatorManager.currentDisplay.length === 1)
+        else if (!operatorHandler.isStackingOperator(calculatorManager.currentDisplay))
         {
-            calculatorManager.currentDisplay = operator;
-            calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -1) + calculatorManager.currentDisplay;
+            operatorHandler.changeOperator(operator);
         }
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDeletionHandling: () => {
-        deleteInputDisplay();
+        screenDisplayHandler.deleteInputDisplay();
         if (calculatorManager.currentDisplay === EMPTY_STRING)
         {
             calculatorManager.currentDisplay = calculatorUI.inputBox.value;
@@ -284,37 +283,38 @@ const enteringOperator = {
     onNumberHandling: number => {
         if (number === DOUBLE_ZERO) number = ZERO;  
         calculatorManager.operator = calculatorManager.currentDisplay[0];
-        if (calculatorManager.currentDisplay.length === 2)
+        if (operatorHandler.isStackingOperator(calculatorManager.currentDisplay))
         {
-            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-1) + number;
-            calculatorUI.inputBox.value += number;
+            screenDisplayHandler.addNegativeNumber(number);
         }
-        else changeTrackerValue(number);
+        else screenDisplayHandler.changeTrackerValue(number);
         if (calculatorManager.isPersistentDecimal) calculatorManager.isPersistentDecimal = false;
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
-        displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
+        screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
         calculatorManager.changeState("enteringSecondNumber");
 
+        console.log(calculatorManager.results);
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: () => {
         calculatorManager.operator = calculatorManager.currentDisplay[0];
-        if (calculatorManager.currentDisplay.length === 2)
+        if (operatorHandler.isStackingOperator(calculatorManager.currentDisplay))
         {
             fillPrefixDecimalWithZero();
-            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-3);
+            updateTrackerValue(-3);
         }
         else 
         {
             fillPrefixDecimalWithZero();
-            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-2);
+            updateTrackerValue(-2);
         }
         if (!calculatorManager.isPersistentDecimal) calculatorManager.isPersistentDecimal = true;
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
-        displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
+        screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
         calculatorManager.changeState("enteringSecondNumber");
-
+        
+        console.log(calculatorManager.resultsl);
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
@@ -354,7 +354,7 @@ const enteringSecondNumber = {
         if (calculatorManager.currentDisplay === MINUS_OPERATOR)
         {
             calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -2);
-            changeTrackerValue(operator);
+            screenDisplayHandler.changeTrackerValue(operator);
             calculatorManager.changeState("enteringOperator");
             
             console.log(calculatorManager.currentSate);
@@ -362,52 +362,55 @@ const enteringSecondNumber = {
 
             return;
         }
-        if (isDividedByZero(calculatorManager.tempResult))
+        if (isDividedByZero(calculatorManager.tempResult) || calculatorManager.secondNumber === +ZERO)
         {
             errorMessage.dividedByZero();
             return;
         }
         updateFirstNumber();
-        changeTrackerValue(operator);
+        screenDisplayHandler.changeTrackerValue(operator);
         calculatorManager.changeState("enteringOperator");
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDeletionHandling: () => {
-        deleteInputDisplay();
+        screenDisplayHandler.deleteInputDisplay();
+        if (calculatorManager.results.length > 0) calculatorManager.results.shift();
         if (!calculatorManager.currentDisplay.includes(DECIMAL) && calculatorManager.isPersistentDecimal) calculatorManager.isPersistentDecimal = false;
         if (calculatorManager.currentDisplay === EMPTY_STRING)
         {
-            calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-1);
+            updateTrackerValue(-1);
             calculatorManager.secondNumber = null;
-            calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber);
+            screenDisplayHandler.displayResult(EMPTY_STRING);
             calculatorManager.changeState("enteringOperator");
 
             console.log(calculatorManager.currentSate);
             console.log(calculatorManager.currentDisplay);
-        }
-        if (displayRecords.isToggleOn)
-        {
-            if (calculatorManager.currentDisplay === MINUS_OPERATOR && calculatorManager.secondNumber === null)
-            {
-                console.log(calculatorManager.currentSate);
-                console.log(calculatorManager.currentDisplay);
 
-                return;
-            }
+            return;
+        }
+        if (calculatorManager.currentDisplay === MINUS_OPERATOR)
+        {
+            calculatorManager.secondNumber = null;
+            screenDisplayHandler.displayResult(EMPTY_STRING); 
+
+            console.log(calculatorManager.currentSate);
+            console.log(calculatorManager.currentDisplay); 
+
+            return;
+        }
+        if (calculatorManager.results.length === 0) 
+        {
             calculatorManager.secondNumber = +calculatorManager.currentDisplay;
-            displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
+            screenDisplayHandler.displayResult(EMPTY_STRING); 
 
-            console.log(calculatorManager.results);
+            console.log(calculatorManager.currentSate);
+            console.log(calculatorManager.currentDisplay);
+
+            return;
         }
-        else
-        {
-            if (calculatorManager.currentDisplay === MINUS_OPERATOR) calculatorManager.secondNumber = null;  
-            else calculatorManager.secondNumber = +calculatorManager.currentDisplay;  
-            updateOutputDisplay();
-            calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber)
-        }
+        screenDisplayHandler.displayResult(calculatorManager.results[0]);
 
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
@@ -419,16 +422,18 @@ const enteringSecondNumber = {
         console.log(calculatorManager.currentDisplay);
     },
     onNumberHandling: number => {
-        if (isPersitentFirstOnlyZero(calculatorManager.currentDisplay, number)) return;
+        if (operandHandler.isPersitentFirstZero(calculatorManager.currentDisplay, number)) return;
         if (calculatorManager.currentDisplay.startsWith(MINUS_OPERATOR) && number === DOUBLE_ZERO && !calculatorManager.isPersistentDecimal) number = ZERO; 
-        updateInputDisplay(number);
+        screenDisplayHandler.updateInputDisplay(number);
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
-        displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
+        screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
 
+        console.log(calculatorManager.results);
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: decimal => {
+        if (calculatorManager.currentDisplay.includes(DECIMAL)) calculatorManager.isPersistentDecimal = true;
         if (calculatorManager.isPersistentDecimal) return;
         if (calculatorManager.currentDisplay === MINUS_OPERATOR) 
         {
@@ -436,28 +441,24 @@ const enteringSecondNumber = {
             calculatorManager.isPersistentDecimal = true;
             return;
         }
-        updateInputDisplay(decimal);
+        screenDisplayHandler.updateInputDisplay(decimal);
         calculatorManager.isPersistentDecimal = true;
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
-        displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
-        
+        screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
+
+        console.log(calculatorManager.results);
         console.log(calculatorManager.currentSate);
         console.log(calculatorManager.currentDisplay);
     },
     onEqualHandling: () => {
-        if (error.calculationError(calculatorManager.tempResult)) 
-        {
-            displayResult(errorMessage.calculationError);
-            return;
-        }
         if (typeof(calculatorManager.secondNumber) !== "number" || isNaN(calculatorManager.secondNumber)) return;
-        if (isDividedByZero(calculatorManager.tempResult))
+        if (isDividedByZero(calculator["/"](calculatorManager.firstNumber, calculatorManager.secondNumber)))
         {
             errorMessage.dividedByZero();
             return;
         }
         updateRecords();
-        swapInputOutputVisual();
+        screenDisplayHandler.swapInputOutputVisual();
         calculatorManager.changeState("result");
 
         console.log(calculatorManager.currentSate);
@@ -495,7 +496,7 @@ const result = {
     onOperatorHandling: operator => {
         resetInputOutputVisual();
         updateFirstNumber();
-        changeTrackerValue(operator);
+        screenDisplayHandler.changeTrackerValue(operator);
         calculatorManager.changeState("enteringOperator");
 
         console.log(calculatorManager.currentSate);
@@ -620,17 +621,86 @@ const displayRecords = {
 
 const error = {
     dividedByZero: [Infinity, -Infinity],
-    calculationError: error => {
-        if (isNaN(error)) return true;
-        return false;
-    },
 }
 
 const errorMessage = {
     dividedByZero: () => {
-        calculatorUI.outputBox.innerText = "/ᐠ - ˕ -マ Can't didvide by 0";
+        calculatorUI.outputBox.innerText = "/ᐠ - ˕ -マ Can't divide by 0";
     },
-    calculationError: "≽(◉˕ ◉ ≼マ Error",
+}
+
+const operandHandler = {
+    isPersitentFirstZero: (tracker, number) => {
+        if (!tracker.includes(DECIMAL))
+        {
+            if ((tracker.startsWith(ZERO) || tracker.startsWith("-0")) && number[0] === ZERO) 
+            {
+                return true;
+            }
+            return false;
+        }
+    },
+    isFirstZeroAfterOperator: (tracker, number) => {
+        if (tracker.startsWith(MINUS_OPERATOR) && number === DOUBLE_ZERO && !calculatorManager.isPersistentDecimal) return true;
+        return false;
+    },
+    isValideOperand: operand => {
+        if (typeof(operand) === "number" && !isNaN(operand)) return true;
+        return false;
+    }
+}
+
+const operatorHandler = {
+    isStackalbeOperator: (tracker, operator) => {
+        if ((multiplyOperator.includes(tracker) || tracker === DIVIDE_OPERATOR) && operator === MINUS_OPERATOR) return true;
+        return false;
+    },
+    isStackingOperator: tracker => {
+        if (tracker.length === 2) return true;
+        return false;
+    },
+    stackOperator: operator => {
+        calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-1) + operator;
+        calculatorUI.inputBox.value += operator;
+    },
+    changeStackingOperator: operator => {
+        calculatorManager.currentDisplay = operator;
+        calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -2) + calculatorManager.currentDisplay;
+    },
+    changeOperator: operator => {
+        calculatorManager.currentDisplay = operator;
+        calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -1) + calculatorManager.currentDisplay;
+    },
+}
+
+const screenDisplayHandler = {
+    // Input Display
+    updateInputDisplay: value => {
+        calculatorUI.inputBox.value += value;
+        calculatorManager.currentDisplay += value;
+    },
+    deleteInputDisplay: () => {
+        calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -1);
+        calculatorManager.currentDisplay = calculatorManager.currentDisplay.slice(0, -1); 
+    },
+    changeTrackerValue: value => {
+        calculatorUI.inputBox.value += value;
+        calculatorManager.currentDisplay = value;
+    },
+    addNegativeNumber: number => {
+        calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(-1) + number;
+        calculatorUI.inputBox.value += number;
+    },
+
+    // Output Display
+    swapInputOutputVisual: () => {
+        calculatorUI.inputBox.setAttribute("style", "opacity: .5; font-size: 36px");
+        calculatorUI.outputBox.setAttribute("style", "opacity: 1; font-size: 48px");
+    },
+    // Result Display
+    displayResult: value => {
+        calculatorUI.outputBox.innerText = value;
+    },
 }
 
 const calculatedDate = new Date();
@@ -651,13 +721,13 @@ function invalidInputHandler()
 function fillPrefixDecimalWithZero()
 {
     let prefixFilledDecimal = "0.";
-    updateInputDisplay(prefixFilledDecimal);
+    screenDisplayHandler.updateInputDisplay(prefixFilledDecimal);
 }
 
 function fillSuffixDecimalWithZero()
 {
     let suffixFilledDecimal = "0";
-    updateInputDisplay(suffixFilledDecimal);
+    screenDisplayHandler.updateInputDisplay(suffixFilledDecimal);
 }
 
     // Reset Functions
@@ -686,70 +756,6 @@ function resetInputOutputVisual()
 {
     calculatorUI.inputBox.removeAttribute("style");
     calculatorUI.outputBox.removeAttribute("style");
-}
-
-    // Display Handling Supports
-        // Input
-function updateInputDisplay(value)
-{
-    calculatorUI.inputBox.value += value;
-    calculatorManager.currentDisplay += value;
-}
-
-function deleteInputDisplay()
-{
-    calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -1);
-    calculatorManager.currentDisplay = calculatorManager.currentDisplay.slice(0, -1);
-}
-
-function changeTrackerValue(value)
-{
-    calculatorUI.inputBox.value += value;
-    calculatorManager.currentDisplay = value;
-}
-        // Output
-function updateOutputDisplay()
-{
-    calculatorManager.results.shift();
-    if (calculatorManager.results.length === 0)
-    {
-        calculatorUI.outputBox.innerText = EMPTY_STRING;
-        return;
-    }
-    calculatorUI.outputBox.innerText = calculatorManager.results[0];
-}
-
-function swapInputOutputVisual()
-{
-    calculatorUI.inputBox.setAttribute("style", "opacity: .5; font-size: 36px");
-    calculatorUI.outputBox.setAttribute("style", "opacity: 1; font-size: 48px");
-}
-        // Result
-function calculateResult(operator, firstNumber, secondNumber)
-{
-    // if (!isFinite(secondNumber)) return errorMessage.calculationError;
-    calculatorManager.tempResult = calculator[operator](firstNumber, secondNumber);
-    if (isDividedByZero(calculatorManager.tempResult) || error.calculationError(calculatorManager.tempResult))
-    {
-        return EMPTY_STRING;
-    }
-    return calculatorManager.tempResult;
-}
-
-function displayResult(value)
-{
-    if (typeof(value) !== "number")
-    {
-        calculatorUI.outputBox.innerText = value;
-
-        console.log(calculatorManager.results);
-
-        return;
-    }
-    calculatorManager.results.unshift(value);
-    calculatorUI.outputBox.innerText = calculatorManager.results[0];
-
-    console.log(calculatorManager.results);
 }
 
     // Records Handling Supports
@@ -786,19 +792,6 @@ function createEmptyRecordsList()
     calculatorUI.recordsList.prepend(emptyList);
 }
 
-    // Zero Handling Supports
-function isPersitentFirstOnlyZero(tracker, number)
-{
-    if (!tracker.includes(DECIMAL))
-    {
-        if ((tracker.startsWith(ZERO) || tracker.startsWith("-0")) && number[0] === ZERO) 
-        {
-            return true;
-        }
-        return false;
-    }
-}
-
 function isDividedByZero(value)
 {
     if (isNaN(value)) return true;
@@ -829,6 +822,21 @@ function updateFirstNumber()
     resetDisplay();
 }
 
+function calculateResult(operator, firstNumber, secondNumber)
+{
+    calculatorManager.tempResult = calculator[operator](firstNumber, secondNumber);
+    if (isDividedByZero(calculatorManager.tempResult))
+    {
+        return EMPTY_STRING;
+    }
+    calculatorManager.results.unshift(calculatorManager.tempResult);
+    return calculatorManager.tempResult;
+}
+
+function updateTrackerValue(value)
+{
+    calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(value);
+}
 // Events Handling
 const invalidInputHandling = invalidInputHandler();
 
