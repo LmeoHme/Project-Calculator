@@ -934,10 +934,3 @@ calculatorUI.buttons.addEventListener("mouseout", e => {
     calculatorUI.buttons.removeEventListener("mousedown", mouseDownEventHandler);
     calculatorUI.buttons.removeEventListener("mouseup", mouseUpEventHandler);
 });
-
-calculatorUI.recordsList.style.display = "none";
-
-// Problems can't solve due to lack of knowledge: 
-// - Snap to the end of input if it's too long
-// - Interaction with calculated results in records
-// - Display polish: align opertor center vertically
