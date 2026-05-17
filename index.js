@@ -42,6 +42,7 @@ const inputType = {
         else if (this.operatorButton.includes(input)) return "operatorButton";
         else if (this.equalButton.includes(input)) return "equalButton";
         else if (input === this.showRecordsButton) return "showRecordsButton";
+        else return "recordResultListItem";
     },
 }
 
@@ -104,18 +105,12 @@ const idle = {
         {
             screenDisplayHandler.updateInputDisplay(operator);
             calculatorManager.changeState("enteringFirstNumber");
-
-            console.log(calculatorManager.currentSate);
-            console.log(calculatorManager.currentDisplay);
         }
     },
     onNumberHandling: number => {
         if (number === DOUBLE_ZERO) number = ZERO;
         screenDisplayHandler.updateInputDisplay(number);
         calculatorManager.changeState("enteringFirstNumber");
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: () => {
         if (!calculatorManager.isPersistentDecimal)
@@ -125,8 +120,6 @@ const idle = {
             calculatorManager.isPersistentDecimal = true;
         }
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
@@ -164,8 +157,6 @@ const enteringFirstNumber = {
         screenDisplayHandler.changeTrackerValue(operator);
         calculatorManager.changeState("enteringOperator");
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDeletionHandling: () => {
         screenDisplayHandler.deleteInputDisplay();
@@ -173,21 +164,12 @@ const enteringFirstNumber = {
         if (calculatorManager.currentDisplay === EMPTY_STRING)
         {
             calculatorManager.changeState("idle");
-
-            console.log(calculatorManager.currentSate);
-            console.log(calculatorManager.currentDisplay);
-
             return;
         }
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onClearAllHandling: () => {
         resetAll();
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onNumberHandling: number => {
     // There'll be 1 zero allowed when a number starts with it, but the rule changed when there's a decimal 
@@ -195,8 +177,6 @@ const enteringFirstNumber = {
         if (operandHandler.isFirstZeroAfterOperator(calculatorManager.currentDisplay, number)) number = ZERO; 
         screenDisplayHandler.updateInputDisplay(number);
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: decimal => {
         if (calculatorManager.currentDisplay.includes(DECIMAL)) calculatorManager.isPersistentDecimal = true;
@@ -210,8 +190,6 @@ const enteringFirstNumber = {
         screenDisplayHandler.updateInputDisplay(decimal);
         calculatorManager.isPersistentDecimal = true;
         
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
@@ -256,8 +234,6 @@ const enteringOperator = {
             operatorHandler.changeOperator(operator);
         }
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDeletionHandling: () => {
         screenDisplayHandler.deleteInputDisplay();
@@ -265,21 +241,13 @@ const enteringOperator = {
         {
             calculatorManager.currentDisplay = calculatorUI.inputBox.value;
             calculatorManager.changeState("enteringFirstNumber");
-
-            console.log(calculatorManager.currentSate);
-            console.log(calculatorManager.currentDisplay);
-
             return;
         }
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onClearAllHandling: () => {
         resetAll();
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onNumberHandling: number => {
         if (number === DOUBLE_ZERO) number = ZERO;  
@@ -294,9 +262,6 @@ const enteringOperator = {
         screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
         calculatorManager.changeState("enteringSecondNumber");
 
-        console.log(calculatorManager.results);
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: () => {
         calculatorManager.operator = calculatorManager.currentDisplay[0];
@@ -315,9 +280,6 @@ const enteringOperator = {
         screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
         calculatorManager.changeState("enteringSecondNumber");
         
-        console.log(calculatorManager.resultsl);
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
@@ -357,10 +319,6 @@ const enteringSecondNumber = {
             calculatorUI.inputBox.value = calculatorUI.inputBox.value.slice(0, -2);
             screenDisplayHandler.changeTrackerValue(operator);
             calculatorManager.changeState("enteringOperator");
-            
-            console.log(calculatorManager.currentSate);
-            console.log(calculatorManager.currentDisplay);
-
             return;
         }
         if (isDividedByZero(calculatorManager.tempResult) || calculatorManager.secondNumber === +ZERO)
@@ -372,8 +330,6 @@ const enteringSecondNumber = {
         screenDisplayHandler.changeTrackerValue(operator);
         calculatorManager.changeState("enteringOperator");
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDeletionHandling: () => {
         screenDisplayHandler.deleteInputDisplay();
@@ -385,42 +341,24 @@ const enteringSecondNumber = {
             calculatorManager.secondNumber = null;
             screenDisplayHandler.displayResult(EMPTY_STRING);
             calculatorManager.changeState("enteringOperator");
-
-            console.log(calculatorManager.currentSate);
-            console.log(calculatorManager.currentDisplay);
-
             return;
         }
         if (calculatorManager.currentDisplay === MINUS_OPERATOR)
         {
             calculatorManager.secondNumber = null;
             screenDisplayHandler.displayResult(EMPTY_STRING); 
-
-            console.log(calculatorManager.currentSate);
-            console.log(calculatorManager.currentDisplay); 
-
             return;
         }
         if (calculatorManager.results.length === 0) 
         {
             calculatorManager.secondNumber = +calculatorManager.currentDisplay;
             screenDisplayHandler.displayResult(EMPTY_STRING); 
-
-            console.log(calculatorManager.currentSate);
-            console.log(calculatorManager.currentDisplay);
-
             return;
         }
         screenDisplayHandler.displayResult(calculatorManager.results[0]);
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onClearAllHandling: () => {
         resetAll();
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onNumberHandling: number => {
         if (operandHandler.isPersitentFirstZero(calculatorManager.currentDisplay, number)) return;
@@ -429,9 +367,6 @@ const enteringSecondNumber = {
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
         screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
 
-        console.log(calculatorManager.results);
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: decimal => {
         if (calculatorManager.currentDisplay.includes(DECIMAL)) calculatorManager.isPersistentDecimal = true;
@@ -446,10 +381,6 @@ const enteringSecondNumber = {
         calculatorManager.isPersistentDecimal = true;
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
         screenDisplayHandler.displayResult(calculateResult(calculatorManager.operator, calculatorManager.firstNumber, calculatorManager.secondNumber));
-
-        console.log(calculatorManager.results);
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onEqualHandling: () => {
         if (typeof(calculatorManager.secondNumber) !== "number" || isNaN(calculatorManager.secondNumber)) return;
@@ -461,9 +392,6 @@ const enteringSecondNumber = {
         updateRecords();
         screenDisplayHandler.swapInputOutputVisual();
         calculatorManager.changeState("result");
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
@@ -500,38 +428,24 @@ const result = {
         screenDisplayHandler.changeTrackerValue(operator);
         calculatorManager.changeState("enteringOperator");
 
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDeletionHandling: () => {
         resetInputOutputVisual();
         calculatorManager.changeState("enteringSecondNumber");
         enteringSecondNumber.onDeletionHandling();
-        
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onClearAllHandling: () => {
         resetAll();
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onNumberHandling: number => {
         resetAll();
         calculatorManager.changeState("idle");
         idle.onNumberHandling(number);
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onDecimalHandling: () => {
         resetAll();
         calculatorManager.changeState("idle");
         idle.onDecimalHandling();
-
-        console.log(calculatorManager.currentSate);
-        console.log(calculatorManager.currentDisplay);
     },
     onShowRecordsHandling: () => {
         displayRecords.checkRecordsLength();
@@ -785,7 +699,7 @@ function createRecordsListItem(record)
 function createEmptyRecordsList()
 {
     if (calculatorUI.recordsList.children.length > 0) return;
-    const MESSAGE = "The record is empty, do some calculation to fill it ≽^•⩊•^≼"
+    const MESSAGE = "The record is empty, do some calculation to fill it ≽^•⩊•^≼";
     const emptyList = document.createElement("p");
     emptyList.classList.toggle("list-item");
     emptyList.setAttribute("style", "font-size: 26px; display: none");
@@ -813,7 +727,6 @@ function updateRecords()
     calculatorManager.records.push(record);
     createRecordsListItem(record);
 
-    console.log(calculatorManager.records);
 }
 
     // Number's Values Handling Supports
@@ -864,6 +777,11 @@ function isEqualButton(value)
     return false;
 }
 
+function isRecordsListItem(value)
+{
+    if (value && value.nodeName === "LI" && inputType.checkInputType(value.innerText) === "recordResultListItem") return true;
+    return false
+}
 // Events Handling
 const invalidInputHandling = invalidInputHandler();
 
@@ -885,6 +803,7 @@ calculatorUI.inputBox.addEventListener("focus", e => {
 const mouseDownEventHandler = function(e) {
     if (e.target && e.target.nodeName === "LI")
     {
+        if (isRecordsListItem(e.target)) return;
         e.target.style.border = "solid 5px rgb(255, 255, 255, 95%)";
         if (isSpecialButtons(e.target))
         {
@@ -897,6 +816,7 @@ const mouseDownEventHandler = function(e) {
 const mouseUpEventHandler = function(e) {
     if (e.target && e.target.nodeName === "LI")
     {
+        if (isRecordsListItem(e.target)) return;
         e.target.style.border = "none";
         if (isSpecialButtons(e.target))
         {
@@ -934,3 +854,5 @@ calculatorUI.buttons.addEventListener("mouseout", e => {
     calculatorUI.buttons.removeEventListener("mousedown", mouseDownEventHandler);
     calculatorUI.buttons.removeEventListener("mouseup", mouseUpEventHandler);
 });
+
+calculatorUI.recordsList.style.display = "none";

@@ -117,8 +117,20 @@ main {
     background-color: rgb(39,124,165);
     margin-bottom: 16px;
 }
+.list-container {
+    width: 344px;
+    height: 448px;
+    gap: 8px;
+    overflow-y: auto;
+
+/* Don't know how it works, but follows will make the scroll bar hidden*/
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.list-container::-webkit-scrollbar {
+  display: none;
+}
 .list-container .list-item {
-    flex: 1;
     align-items: flex-start;
     width: auto;
     height: auto;
