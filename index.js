@@ -12,6 +12,7 @@ const calculator = {
     "+": (a, b) => a + b,
     "-": (a, b) => a - b,
     "x": (a, b) => a * b,
+    "*": (a, b) => a * b,
     "/": (a, b) => a / b,
 }
 
@@ -837,6 +838,32 @@ function updateTrackerValue(value)
 {
     calculatorManager.currentDisplay = calculatorUI.inputBox.value.slice(value);
 }
+
+    // 
+function isNumberAndDecimalButtons(value)
+{
+    if (value && value.nodeName === "LI" && (inputType.numberButton.includes(value.innerText) || value.innerText === inputType.decimalButton)) return true;
+    return false;
+}
+
+function isSpecialButtons(value)
+{
+    if (value && value.nodeName === "LI" && (inputType.deleteButton.includes(value.innerText) || value.innerText === inputType.allClearButton || value.innerText === inputType.showRecordsButton)) return true;
+    return false;
+}
+
+function isOperatorButtons(value)
+{
+    if (value && value.nodeName === "LI" && inputType.operatorButton.includes(value.innerText)) return true;
+    return false;
+}
+
+function isEqualButton(value)
+{
+    if (value && value.nodeName === "LI" && inputType.equalButton.includes(value.innerText)) return true;
+    return false;
+}
+
 // Events Handling
 const invalidInputHandling = invalidInputHandler();
 
@@ -845,30 +872,72 @@ calculatorUI.inputBox.addEventListener("click", e => {
 });
 
 calculatorUI.inputBox.addEventListener("keydown", e => {
+    e.preventDefault();
     e.target.scrollLeft = e.target.scrollWidth;
-    console.log(e.target.scrollLeft);
-    console.log(e.target.scrollWidth);
-
     calculatorManager.checkState(e.key);
     invalidInputHandling();
-    e.preventDefault();
 });
 
 calculatorUI.inputBox.addEventListener("focus", e => {
     e.target.scrollLeft = e.target.scrollWidth;
-    console.log(e.target.scrollLeft);
-    console.log(e.target.scrollWidth);
 })
 
-calculatorUI.buttons.addEventListener("click", e => {
+const mouseDownEventHandler = function(e) {
     if (e.target && e.target.nodeName === "LI")
     {
+        e.target.style.border = "solid 5px rgb(255, 255, 255, 95%)";
+        if (isSpecialButtons(e.target))
+        {
+            e.target.style.fontSize = "20px";
+        }
         calculatorManager.checkState(e.target.innerText);
     }
+}
+
+const mouseUpEventHandler = function(e) {
+    if (e.target && e.target.nodeName === "LI")
+    {
+        e.target.style.border = "none";
+        if (isSpecialButtons(e.target))
+        {
+            e.target.style.fontSize = "24px";
+        }
+    }
+}
+
+calculatorUI.buttons.addEventListener("mouseover", e => {
+    if (isSpecialButtons(e.target))
+    {
+        e.target.style.backgroundColor = "rgb(20, 150, 200)";
+    }
+    if (isOperatorButtons(e.target))
+    {
+        e.target.style.backgroundColor = "rgb(45, 120, 160)";
+    }
+    if (isNumberAndDecimalButtons(e.target))
+    {
+        e.target.style.opacity = ".8";
+    }
+    if (isEqualButton(e.target))
+    {
+        e.target.style.backgroundColor = "rgb(80, 220, 240)";
+    }
+    calculatorUI.buttons.addEventListener("mousedown", mouseDownEventHandler);
+    calculatorUI.buttons.addEventListener("mouseup", mouseUpEventHandler);
+});
+
+calculatorUI.buttons.addEventListener("mouseout", e => {
+    if (e.target && e.target.nodeName === "LI")
+    {
+        e.target.removeAttribute("style");
+    }
+    calculatorUI.buttons.removeEventListener("mousedown", mouseDownEventHandler);
+    calculatorUI.buttons.removeEventListener("mouseup", mouseUpEventHandler);
 });
 
 calculatorUI.recordsList.style.display = "none";
 
-// Align operator to center vertically needs adding a span element with display: inline-flex, will be applied when implement EnteringOperator state
 // Problems can't solve due to lack of knowledge: 
 // - Snap to the end of input if it's too long
+// - Interaction with calculated results in records
+// - Display polish: align opertor center vertically
