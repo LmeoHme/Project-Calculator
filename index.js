@@ -41,7 +41,6 @@ const inputType = {
         else if (input === this.decimalButton) return "decimalButton";
         else if (this.operatorButton.includes(input)) return "operatorButton";
         else if (this.equalButton.includes(input)) return "equalButton";
-        else if (input === this.showRecordsButton) return "showRecordsButton";
         else return "recordResultListItem";
     },
 }
