@@ -789,16 +789,16 @@ calculatorUI.inputBox.addEventListener("click", e => {
     e.target.setSelectionRange(e.target.value.length, e.target.value.length);
 });
 
+calculatorUI.inputBox.addEventListener("focus", e => {
+    e.target.scrollLeft = e.target.scrollWidth;
+})
+
 calculatorUI.inputBox.addEventListener("keydown", e => {
     e.preventDefault();
     e.target.scrollLeft = e.target.scrollWidth;
     calculatorManager.checkState(e.key);
     invalidInputHandling();
 });
-
-calculatorUI.inputBox.addEventListener("focus", e => {
-    e.target.scrollLeft = e.target.scrollWidth;
-})
 
 const mouseDownEventHandler = function(e) {
     if (e.target && e.target.nodeName === "LI")
@@ -830,15 +830,15 @@ calculatorUI.buttons.addEventListener("mouseover", e => {
     {
         e.target.style.backgroundColor = "rgb(20, 150, 200)";
     }
-    if (isOperatorButtons(e.target))
+    else if (isOperatorButtons(e.target))
     {
         e.target.style.backgroundColor = "rgb(45, 120, 160)";
     }
-    if (isNumberAndDecimalButtons(e.target))
+    else if (isNumberAndDecimalButtons(e.target))
     {
         e.target.style.opacity = ".8";
     }
-    if (isEqualButton(e.target))
+    else if (isEqualButton(e.target))
     {
         e.target.style.backgroundColor = "rgb(80, 220, 240)";
     }
