@@ -52,13 +52,13 @@ const calculatorManager = {
     operator: null,
     currentDisplay: EMPTY_STRING,
     isPersistentDecimal: false,
-    currentSate: "idle",
+    currentState: "idle",
     tempResult: null,
     results: [],
     records: [],
 
     checkState: function(input) {
-        switch (this.currentSate) 
+        switch (this.currentState) 
         {
             case "idle":
                 idle.handleInput(input);
@@ -78,7 +78,7 @@ const calculatorManager = {
         }
     },
     changeState: function(state) {
-        this.currentSate = state;
+        this.currentState = state;
     }
 }
 
@@ -173,7 +173,7 @@ const enteringFirstNumber = {
     },
     onNumberHandling: number => {
     // There'll be 1 zero allowed when a number starts with it, but the rule changed when there's a decimal 
-        if (operandHandler.isPersitentFirstZero(calculatorManager.currentDisplay, number)) return;
+        if (operandHandler.isPersistentFirstZero(calculatorManager.currentDisplay, number)) return;
         if (operandHandler.isFirstZeroAfterOperator(calculatorManager.currentDisplay, number)) number = ZERO; 
         screenDisplayHandler.updateInputDisplay(number);
 
@@ -221,7 +221,7 @@ const enteringOperator = {
         }
     },
     onOperatorHandling: operator => {
-        if (operatorHandler.isStackalbeOperator(calculatorManager.currentDisplay, operator))
+        if (operatorHandler.isStackableOperator(calculatorManager.currentDisplay, operator))
         {
             operatorHandler.stackOperator(operator);
         }
@@ -361,7 +361,7 @@ const enteringSecondNumber = {
         resetAll();
     },
     onNumberHandling: number => {
-        if (operandHandler.isPersitentFirstZero(calculatorManager.currentDisplay, number)) return;
+        if (operandHandler.isPersistentFirstZero(calculatorManager.currentDisplay, number)) return;
         if (calculatorManager.currentDisplay.startsWith(MINUS_OPERATOR) && number === DOUBLE_ZERO && !calculatorManager.isPersistentDecimal) number = ZERO; 
         screenDisplayHandler.updateInputDisplay(number);
         calculatorManager.secondNumber = +calculatorManager.currentDisplay;
@@ -545,7 +545,7 @@ const errorMessage = {
 }
 
 const operandHandler = {
-    isPersitentFirstZero: (tracker, number) => {
+    isPersistentFirstZero: (tracker, number) => {
         if (!tracker.includes(DECIMAL))
         {
             if ((tracker.startsWith(ZERO) || tracker.startsWith("-0")) && number[0] === ZERO) 
@@ -566,7 +566,7 @@ const operandHandler = {
 }
 
 const operatorHandler = {
-    isStackalbeOperator: (tracker, operator) => {
+    isStackableOperator: (tracker, operator) => {
         if ((multiplyOperator.includes(tracker) || tracker === DIVIDE_OPERATOR) && operator === MINUS_OPERATOR) return true;
         return false;
     },

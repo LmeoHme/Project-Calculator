@@ -10,6 +10,6 @@
  - Beside, although using a good design pattern, my still end up being messy due to the lack of knowledge and exp. I still need to change all the states when there're bugs or when I want to add something.
  - Here are some features I wanted to add but couldn't solve their problems: 
    + Snap to the end of input if it's too long. When calculations become to long and input box couldn't show up all of them, the cursor will automatically snap to the end of current calculation, so user can see what they're inserting.
-   + Interaction with calculated results in records. User can use calculated result from the recrods list to make calculations.
-   + Display polish: align opertor center vertically. Make the operators in calculaions being aligned center vertically for better visual looking.
+   + Interaction with calculated results in records. User can use calculated result from the records list to make calculations.
+   + Display polish: align operator center vertically. Make the operators in calculations being aligned center vertically for better visual looking.
    + Interaction link: When user type in input using keyboard, the buttons will trigger clicked effect.
